@@ -522,9 +522,19 @@ td select.tsel{height:26px;padding:0 4px;font-size:10px;border:1px solid var(--b
   </div>
   <div class="divl"></div>
   <div class="stitle">Vencimento e estoque mínimo</div>
-  <div class="fr">
-    <div class="fg"><label>Data de vencimento</label><input type="date" id="mpVenc"></div>
-    <div class="fg"><label>Estoque mínimo (kits)</label><input type="number" id="mpMin" min="0" placeholder="Ex: 5"></div>
+  <label class="kit-toggle" onclick="toggleSemVenc()">
+    <input type="checkbox" id="mpSemVenc" onclick="event.stopPropagation();toggleSemVenc()">
+    <span class="kit-toggle-lbl"><i class="ti ti-infinity" style="font-size:14px;vertical-align:middle;margin-right:4px"></i> Produto sem vencimento</span>
+    <span class="kit-toggle-sub" id="semVencSub">Marque se o produto não é perecível</span>
+  </label>
+  <div id="vencFields">
+    <div class="fr">
+      <div class="fg"><label>Data de vencimento</label><input type="date" id="mpVenc"></div>
+      <div class="fg"><label>Estoque mínimo (kits)</label><input type="number" id="mpMin" min="0" placeholder="Ex: 5"></div>
+    </div>
+  </div>
+  <div id="vencSemFields" style="display:none">
+    <div class="fg"><label>Estoque mínimo (kits)</label><input type="number" id="mpMinSV" min="0" placeholder="Ex: 5"></div>
   </div>
   <div class="divl"></div>
   <div class="fr">
@@ -586,6 +596,22 @@ let sel=new Set(),prtFmt='A4',prtTipo='estoque',prtItems=[];
 let iwb=null,isheets=[],iactSheet=0,iraw=[],icolH=[],irows=[];
 let sortField='id',sortAsc=true;
 const CATS=['Hidráulico','Elétrico','Estrutural','Alvenaria','Cobertura','Fixação','Acabamento','Ferramentas','Outro'];
+
+function toggleSemVenc(){
+  const sem=document.getElementById('mpSemVenc').checked;
+  document.getElementById('vencFields').style.display=sem?'none':'';
+  document.getElementById('vencSemFields').style.display=sem?'':'none';
+  document.getElementById('semVencSub').textContent=sem?'Sem data de vencimento — produto durável':'Marque se o produto não é perecível';
+  if(sem){
+    // Copiar valor do estoque mínimo entre os dois campos ao alternar
+    const v=document.getElementById('mpMin').value;
+    document.getElementById('mpMinSV').value=v;
+    document.getElementById('mpVenc').value='';
+  } else {
+    const v=document.getElementById('mpMinSV').value;
+    document.getElementById('mpMin').value=v;
+  }
+}
 
 function toggleKitField(){
   const isKit=document.getElementById('mpIsKit').checked;
@@ -656,11 +682,17 @@ function fmtR(v){return v&&v>0?'R$ '+Number(v).toFixed(2).replace('.',','):'—'
 function clE(id){const e=document.getElementById(id);if(e)e.textContent='';}
 
 function semanasRestantes(dataVenc){
-  if(!dataVenc)return null;
+  if(!dataVenc||dataVenc==='SEM_VENCIMENTO')return null;
   const hoje=new Date();hoje.setHours(0,0,0,0);
   const venc=new Date(dataVenc+'T00:00:00');
   const diff=Math.floor((venc-hoje)/(7*24*3600*1000));
   return diff;
+}
+
+function fmtVenc(dataVenc){
+  if(!dataVenc)return'—';
+  if(dataVenc==='SEM_VENCIMENTO')return'<span class="bx bgy" style="font-size:10px">Sem vencimento</span>';
+  return fmtD(dataVenc);
 }
 
 function statusVenc(p){
@@ -770,7 +802,7 @@ function renderProd(){
       '<td class="num" style="color:#888">'+(p.estoqueMinimo||'—')+'</td>'+
       '<td class="num">'+fmtR(p.precoObra)+'</td>'+
       '<td class="num">'+fmtR(p.precoML)+'</td>'+
-      '<td style="white-space:nowrap">'+fmtD(p.dataVencimento)+'</td>'+
+      '<td style="white-space:nowrap">'+fmtVenc(p.dataVencimento)+'</td>'+
       '<td>'+semTag+'</td>'+
       '<td style="color:#aaa;font-size:11px">'+(p.obra||'—')+'</td>'+
       '<td style="color:#aaa;font-size:11px;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(p.localizacao||'—')+'</td>'+
@@ -790,7 +822,7 @@ function openAddProd(){
   document.getElementById('mpId').value='Auto';
   document.getElementById('mpDt').value=fmtD(today());
   ['mpDesc','mpObra','mpLoc','mpTot'].forEach(id=>document.getElementById(id).value='');
-  ['mpPec','mpQtd','mpPrecoObra','mpPrecoML','mpMin'].forEach(id=>document.getElementById(id).value='');
+  ['mpPec','mpQtd','mpPrecoObra','mpPrecoML','mpMin','mpMinSV'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('mpVenc').value='';
   document.getElementById('mpCat').value='';
   document.getElementById('mpUnid').value='';
@@ -798,6 +830,10 @@ function openAddProd(){
   document.getElementById('kitFields').style.display='none';
   document.getElementById('kitToggleSub').textContent='Não — cada unidade é cadastrada individualmente';
   document.getElementById('mpQtdLabel').textContent='Quantidade *';
+  document.getElementById('mpSemVenc').checked=false;
+  document.getElementById('vencFields').style.display='';
+  document.getElementById('vencSemFields').style.display='none';
+  document.getElementById('semVencSub').textContent='Marque se o produto não é perecível';
   ['mpDescE','mpCatE','mpUnidE','mpPecE','mpQtdE'].forEach(id=>clE(id));
   document.getElementById('mProd').classList.add('on');
   setTimeout(()=>document.getElementById('mpDesc').focus(),80);
@@ -813,8 +849,6 @@ function openEditP(id){
   document.getElementById('mpUnid').value=p.unidade||'';
   document.getElementById('mpPrecoObra').value=p.precoObra||'';
   document.getElementById('mpPrecoML').value=p.precoML||'';
-  document.getElementById('mpVenc').value=p.dataVencimento||'';
-  document.getElementById('mpMin').value=p.estoqueMinimo||'';
   document.getElementById('mpObra').value=p.obra||'';
   document.getElementById('mpLoc').value=p.localizacao||'';
   // Toggle kit
@@ -826,6 +860,15 @@ function openEditP(id){
   document.getElementById('mpPec').value=isKit?p.pecasPorKit:'';
   document.getElementById('mpQtd').value=isKit?p.qtdKits:p.totalPecas;
   document.getElementById('mpTot').value=p.totalPecas;
+  // Toggle sem vencimento — 'SEM_VENCIMENTO' é o valor especial
+  const semVenc=p.dataVencimento==='SEM_VENCIMENTO';
+  document.getElementById('mpSemVenc').checked=semVenc;
+  document.getElementById('vencFields').style.display=semVenc?'none':'';
+  document.getElementById('vencSemFields').style.display=semVenc?'':'none';
+  document.getElementById('semVencSub').textContent=semVenc?'Sem data de vencimento — produto durável':'Marque se o produto não é perecível';
+  document.getElementById('mpVenc').value=semVenc?'':p.dataVencimento||'';
+  document.getElementById('mpMin').value=p.estoqueMinimo||'';
+  document.getElementById('mpMinSV').value=p.estoqueMinimo||'';
   ['mpDescE','mpCatE','mpUnidE','mpPecE','mpQtdE'].forEach(id=>clE(id));
   document.getElementById('mProd').classList.add('on');
 }
@@ -854,8 +897,9 @@ async function saveProd(){
   if(!ok)return;
   const precoObra=parseFloat(document.getElementById('mpPrecoObra').value)||0;
   const precoML=parseFloat(document.getElementById('mpPrecoML').value)||0;
-  const dataVencimento=document.getElementById('mpVenc').value||'';
-  const estoqueMinimo=parseInt(document.getElementById('mpMin').value)||0;
+  const semVenc=document.getElementById('mpSemVenc').checked;
+  const dataVencimento=semVenc?'SEM_VENCIMENTO':document.getElementById('mpVenc').value||'';
+  const estoqueMinimo=parseInt(semVenc?document.getElementById('mpMinSV').value:document.getElementById('mpMin').value)||0;
   const obra=document.getElementById('mpObra').value.trim(),loc=document.getElementById('mpLoc').value.trim();
   const total=pK*qK;
   const data={id:editPId,dataCadastro:editPId?DB.produtos.find(p=>p.id===editPId)?.dataCadastro:today(),descricao:desc.toUpperCase(),categoria:cat,unidade:unid,pecasPorKit:pK,qtdKits:qK,totalPecas:total,precoObra,precoML,dataVencimento,estoqueMinimo,obra,localizacao:loc};
@@ -998,7 +1042,7 @@ async function iConfirm(){
 function iGoStep(n){['ip1','ip2','ip3','ipOk'].forEach(id=>document.getElementById(id).style.display='none');[1,2,3].forEach(i=>{document.getElementById('isn'+i).className='snum';document.getElementById('isl'+i).className='slbl2';if(i<3)document.getElementById('iline'+i).className='sline';});if(n==='ok'){document.getElementById('ipOk').style.display='';[1,2,3].forEach(i=>{document.getElementById('isn'+i).className='snum dn';document.getElementById('isn'+i).innerHTML='<i class="ti ti-check" style="font-size:11px"></i>';document.getElementById('isl'+i).className='slbl2 dn';if(i<3)document.getElementById('iline'+i).className='sline dn';});return;}document.getElementById('ip'+n).style.display='';for(let i=1;i<n;i++){document.getElementById('isn'+i).className='snum dn';document.getElementById('isn'+i).innerHTML='<i class="ti ti-check" style="font-size:11px"></i>';document.getElementById('isl'+i).className='slbl2 dn';if(i<3)document.getElementById('iline'+i).className='sline dn';}document.getElementById('isn'+n).className='snum act';document.getElementById('isl'+n).className='slbl2 act';}
 function iReset(){iwb=null;iraw=[];icolH=[];irows=[];iactSheet=0;document.getElementById('ifileinfo').style.display='none';document.getElementById('ifile').value='';document.getElementById('ierr1').textContent='';iGoStep(1);}
 
-function renderRel(){document.getElementById('relBody').innerHTML=DB.produtos.map(p=>'<tr><td><span class="bx bbl">'+p.id+'</span></td><td style="font-size:11px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+p.descricao+'</td><td><span class="bx bct">'+(p.categoria||'—')+'</span></td><td class="num">'+p.qtdKits+'</td><td class="num">'+p.totalPecas+'</td><td class="num">'+fmtR(p.precoObra)+'</td><td class="num">'+fmtR(p.precoML)+'</td><td>'+fmtD(p.dataVencimento)+'</td><td style="font-size:11px;color:#aaa">'+(p.localizacao||'—')+'</td></tr>').join('');}
+function renderRel(){document.getElementById('relBody').innerHTML=DB.produtos.map(p=>'<tr><td><span class="bx bbl">'+p.id+'</span></td><td style="font-size:11px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+p.descricao+'</td><td><span class="bx bct">'+(p.categoria||'—')+'</span></td><td class="num">'+p.qtdKits+'</td><td class="num">'+p.totalPecas+'</td><td class="num">'+fmtR(p.precoObra)+'</td><td class="num">'+fmtR(p.precoML)+'</td><td>'+fmtVenc(p.dataVencimento)+'</td><td style="font-size:11px;color:#aaa">'+(p.localizacao||'—')+'</td></tr>').join('');}
 
 function exportCSV(){const rows=[['ID','Data Cadastro','Descrição','Categoria','Unidade','Peças por Kit','Qtd. Kits','Total Peças','Preço Obra','Preço ML','Data Vencimento','Estoque Mínimo','Obra Origem','Localização'],...DB.produtos.map(p=>[p.id,p.dataCadastro,'"'+p.descricao+'"',p.categoria,p.unidade,p.pecasPorKit,p.qtdKits,p.totalPecas,p.precoObra||'',p.precoML||'',p.dataVencimento||'',p.estoqueMinimo||'',p.obra||'',p.localizacao||''])];const csv=rows.map(r=>r.join(';')).join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'}));a.download='estoque_solida_'+today()+'.csv';a.click();}
 
