@@ -372,8 +372,8 @@ td select.tsel{height:26px;padding:0 4px;font-size:10px;border:1px solid var(--b
         <th class="sortable num" onclick="sortProd('qtdKits')">Kits</th>
         <th class="sortable num" onclick="sortProd('totalPecas')">Total</th>
         <th class="num">Mín.</th>
-        <th class="sortable num" onclick="sortProd('precoObra')">Preço Obra</th>
-        <th class="sortable num" onclick="sortProd('precoML')">Preço ML</th>
+        <th class="sortable num" onclick="sortProd('precoObra')">Preço Produto</th>
+        <th class="sortable num" onclick="sortProd('precoML')">Preço Venda</th>
         <th class="sortable" onclick="sortProd('dataVencimento')">Vencimento</th>
         <th>Semanas</th>
         <th class="sortable" onclick="sortProd('obra')">Origem</th>
@@ -475,13 +475,13 @@ td select.tsel{height:26px;padding:0 4px;font-size:10px;border:1px solid var(--b
   <div class="page" id="page-rel">
     <div class="rcards">
       <div class="rcard" onclick="openPrint('estoque')"><div class="rcard-icon" style="background:var(--blue-lt)"><i class="ti ti-list" style="font-size:17px;color:var(--blue)"></i></div><div class="rcard-lbl">Estoque completo</div><div class="rcard-sub">Todos os produtos e saldos</div></div>
-      <div class="rcard" onclick="openPrint('venda')"><div class="rcard-icon" style="background:var(--green-lt)"><i class="ti ti-tag" style="font-size:17px;color:var(--green)"></i></div><div class="rcard-lbl">Lista de preços</div><div class="rcard-sub">Preço Obra e Preço ML</div></div>
+      <div class="rcard" onclick="openPrint('venda')"><div class="rcard-icon" style="background:var(--green-lt)"><i class="ti ti-tag" style="font-size:17px;color:var(--green)"></i></div><div class="rcard-lbl">Lista de preços</div><div class="rcard-sub">Preço Produto e Preço Venda</div></div>
       <div class="rcard" onclick="openPrint('mov')"><div class="rcard-icon" style="background:var(--orange-lt)"><i class="ti ti-arrows-exchange" style="font-size:17px;color:var(--orange)"></i></div><div class="rcard-lbl">Movimentações</div><div class="rcard-sub">Histórico completo</div></div>
       <div class="rcard" onclick="openPrint('cat')"><div class="rcard-icon" style="background:#f0eaf8"><i class="ti ti-category" style="font-size:17px;color:#6a2fa0"></i></div><div class="rcard-lbl">Por categoria</div><div class="rcard-sub">Resumo agrupado</div></div>
       <div class="rcard" onclick="openPrint('alerta')"><div class="rcard-icon" style="background:var(--red-lt)"><i class="ti ti-bell" style="font-size:17px;color:var(--red)"></i></div><div class="rcard-lbl">Alertas</div><div class="rcard-sub">Vencimentos e estoque baixo</div></div>
     </div>
     <div class="stitle">Pré-visualização — estoque atual</div>
-    <div class="tw"><table><thead><tr><th>ID</th><th>Descrição</th><th>Categoria</th><th class="num">Kits</th><th class="num">Unid.</th><th class="num">Preço Obra</th><th class="num">Preço ML</th><th>Vencimento</th><th>Local</th></tr></thead><tbody id="relBody"></tbody></table></div>
+    <div class="tw"><table><thead><tr><th>ID</th><th>Descrição</th><th>Categoria</th><th class="num">Kits</th><th class="num">Unid.</th><th class="num">Preço Produto</th><th class="num">Preço Venda</th><th>Vencimento</th><th>Local</th></tr></thead><tbody id="relBody"></tbody></table></div>
   </div>
 
   <!-- USUÁRIOS -->
@@ -517,8 +517,8 @@ td select.tsel{height:26px;padding:0 4px;font-size:10px;border:1px solid var(--b
   <div class="divl"></div>
   <div class="stitle">Preços</div>
   <div class="fr">
-    <div class="fg"><label>Preço Obra (R$)</label><input type="number" id="mpPrecoObra" min="0" step="0.01" placeholder="0,00"></div>
-    <div class="fg"><label>Preço ML (R$)</label><input type="number" id="mpPrecoML" min="0" step="0.01" placeholder="0,00"></div>
+    <div class="fg"><label>Preço Produto (R$)</label><input type="number" id="mpPrecoObra" min="0" step="0.01" placeholder="0,00"></div>
+    <div class="fg"><label>Preço Venda (R$)</label><input type="number" id="mpPrecoML" min="0" step="0.01" placeholder="0,00"></div>
   </div>
   <div class="divl"></div>
   <div class="stitle">Vencimento e estoque mínimo</div>
@@ -956,7 +956,7 @@ function renderMov(){
 function downloadModelo(){
   const wb=XLSX.utils.book_new();
   const data=[
-    ['Descrição do Produto','Categoria','Unidade','Peças por Kit','Qtd. Kits','Preço Obra (R$)','Preço ML (R$)','Data Vencimento (AAAA-MM-DD)','Estoque Mínimo (kits)','Localização'],
+    ['Descrição do Produto','Categoria','Unidade','Peças por Kit','Qtd. Kits','Preço Produto (R$)','Preço Venda (R$)','Data Vencimento (AAAA-MM-DD)','Estoque Mínimo (kits)','Localização'],
     ['JOELHO 90° 40MM COLA MARROM','Hidráulico','Kit','5','10','8.50','12.90','2027-06-30','5','Galpão A']
   ];
   const ws=XLSX.utils.aoa_to_sheet(data);
@@ -973,7 +973,7 @@ function iRenderSheets(){document.getElementById('islist').innerHTML=isheets.map
 function iSelSheet(idx){iactSheet=idx;const ws=iwb.Sheets[isheets[idx]];iraw=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});iRenderSheets();iRenderPrev();}
 function iRenderPrev(){const hasH=document.getElementById('ihasH').checked;if(!iraw.length){document.getElementById('iprev').innerHTML='';return;}const hrow=hasH?iraw[0]:iraw[0].map((_,i)=>'Coluna '+(i+1));const drows=iraw.slice(hasH?1:0,hasH?6:5);icolH=hrow.map(h=>String(h||'').trim());document.getElementById('iprev').innerHTML='<thead><tr>'+icolH.map(h=>'<th>'+(h||'—')+'</th>').join('')+'</tr></thead><tbody>'+drows.map(r=>'<tr>'+hrow.map((_,i)=>'<td>'+(r[i]!==undefined&&r[i]!==''?r[i]:'—')+'</td>').join('')+'</tr>').join('')+'</tbody>';}
 function iGoStep2(){if(!iraw.length){document.getElementById('ierr1').textContent='Nenhum dado encontrado.';return;}iBuildMap();iGoStep(2);}
-const IFIELDS=[{key:'descricao',label:'Descrição do produto',req:true},{key:'qtdKits',label:'Qtd. de kits',req:true},{key:'pecasPorKit',label:'Peças por kit',req:false},{key:'categoria',label:'Categoria',req:false},{key:'unidade',label:'Unidade',req:false},{key:'precoObra',label:'Preço Obra (R$)',req:false},{key:'precoML',label:'Preço ML (R$)',req:false},{key:'dataVencimento',label:'Data Vencimento',req:false},{key:'estoqueMinimo',label:'Estoque mínimo (kits)',req:false},{key:'localizacao',label:'Localização',req:false}];
+const IFIELDS=[{key:'descricao',label:'Descrição do produto',req:true},{key:'qtdKits',label:'Qtd. de kits',req:true},{key:'pecasPorKit',label:'Peças por kit',req:false},{key:'categoria',label:'Categoria',req:false},{key:'unidade',label:'Unidade',req:false},{key:'precoObra',label:'Preço Produto (R$)',req:false},{key:'precoML',label:'Preço Venda (R$)',req:false},{key:'dataVencimento',label:'Data Vencimento',req:false},{key:'estoqueMinimo',label:'Estoque mínimo (kits)',req:false},{key:'localizacao',label:'Localização',req:false}];
 function iAutoMatch(key){const hints={descricao:['descri','produto','material','nome'],qtdKits:['qtd kit','kits','qtd. kit'],pecasPorKit:['pec','por kit'],categoria:['categ','tipo'],unidade:['unid','medida'],precoObra:['obra','preco obra','preço obra'],precoML:['ml','mercado','preco ml','preço ml'],dataVencimento:['venc','validade','expir'],estoqueMinimo:['minim','minimo','mín'],localizacao:['local','loca']};const hs=hints[key]||[];for(let i=0;i<icolH.length;i++){const h=icolH[i].toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');if(hs.some(hint=>h.includes(hint.normalize('NFD').replace(/[\u0300-\u036f]/g,''))))return i;}return -1;}
 function iBuildMap(){const opts='<option value="">— não importar —</option>'+icolH.map((h,i)=>'<option value="'+i+'">'+(h||'Coluna '+(i+1))+'</option>').join('');document.getElementById('imapgrid').innerHTML=IFIELDS.map(f=>{const ai=iAutoMatch(f.key);return'<div class="maprow"><div class="maplbl">'+f.label+(f.req?'<span class="mapreq">*</span>':'')+'</div><i class="ti ti-arrow-right" style="font-size:12px;color:#ccc"></i><select class="mapsel'+(ai>=0?' mp':'')+'" id="imap_'+f.key+'" onchange="this.classList.toggle(\'mp\',this.value!==\'\')"><option value="">— não importar —</option>'+icolH.map((h,i)=>'<option value="'+i+'"'+(i===ai?' selected':'')+'>'+h+'</option>').join('')+'</select></div>';}).join('');}
 function iGoStep3(){
@@ -1044,7 +1044,7 @@ function iReset(){iwb=null;iraw=[];icolH=[];irows=[];iactSheet=0;document.getEle
 
 function renderRel(){document.getElementById('relBody').innerHTML=DB.produtos.map(p=>'<tr><td><span class="bx bbl">'+p.id+'</span></td><td style="font-size:11px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+p.descricao+'</td><td><span class="bx bct">'+(p.categoria||'—')+'</span></td><td class="num">'+p.qtdKits+'</td><td class="num">'+p.totalPecas+'</td><td class="num">'+fmtR(p.precoObra)+'</td><td class="num">'+fmtR(p.precoML)+'</td><td>'+fmtVenc(p.dataVencimento)+'</td><td style="font-size:11px;color:#aaa">'+(p.localizacao||'—')+'</td></tr>').join('');}
 
-function exportCSV(){const rows=[['ID','Data Cadastro','Descrição','Categoria','Unidade','Peças por Kit','Qtd. Kits','Total Peças','Preço Obra','Preço ML','Data Vencimento','Estoque Mínimo','Obra Origem','Localização'],...DB.produtos.map(p=>[p.id,p.dataCadastro,'"'+p.descricao+'"',p.categoria,p.unidade,p.pecasPorKit,p.qtdKits,p.totalPecas,p.precoObra||'',p.precoML||'',p.dataVencimento||'',p.estoqueMinimo||'',p.obra||'',p.localizacao||''])];const csv=rows.map(r=>r.join(';')).join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'}));a.download='estoque_solida_'+today()+'.csv';a.click();}
+function exportCSV(){const rows=[['ID','Data Cadastro','Descrição','Categoria','Unidade','Peças por Kit','Qtd. Kits','Total Peças','Preço Produto','Preço Venda','Data Vencimento','Estoque Mínimo','Obra Origem','Localização'],...DB.produtos.map(p=>[p.id,p.dataCadastro,'"'+p.descricao+'"',p.categoria,p.unidade,p.pecasPorKit,p.qtdKits,p.totalPecas,p.precoObra||'',p.precoML||'',p.dataVencimento||'',p.estoqueMinimo||'',p.obra||'',p.localizacao||''])];const csv=rows.map(r=>r.join(';')).join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'}));a.download='estoque_solida_'+today()+'.csv';a.click();}
 
 function openPrint(tipo){prtTipo=tipo;prtItems=sel.size>0&&tipo!=='mov'&&tipo!=='alerta'?DB.produtos.filter(p=>sel.has(p.id)):tipo==='mov'?DB.movs:DB.produtos;const labels={estoque:'Estoque completo',venda:'Lista de preços',mov:'Movimentações',cat:'Por categoria',alerta:'Relatório de alertas'};document.getElementById('prtInfo').innerHTML='<strong>'+labels[tipo]+'</strong> · '+prtItems.length+' registro'+(prtItems.length!==1?'s':'');prtFmt='A4';document.getElementById('pA4').classList.add('sel');document.getElementById('pPDF').classList.remove('sel');document.getElementById('prtObs').value='';document.getElementById('mPrint').classList.add('on');}
 function selFmt(f){prtFmt=f;document.getElementById('pA4').classList.toggle('sel',f==='A4');document.getElementById('pPDF').classList.toggle('sel',f==='PDF');}
@@ -1053,7 +1053,7 @@ function doPrint(){
   const now=new Date(),ds=now.toLocaleDateString('pt-BR')+' '+now.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
   let titulo='',cols='',rows='',totRow='';
   if(prtTipo==='mov'){titulo='Histórico de Movimentações';cols='<th>#</th><th>Data</th><th>Tipo</th><th>Produto</th><th style="text-align:right">Kits</th><th style="text-align:right">Unid.</th><th>Origem/Destino</th><th>Usuário</th>';rows=[...DB.movs].reverse().map((m,i)=>{const p=DB.produtos.find(x=>x.id===m.prodId);return'<tr><td>'+(i+1)+'</td><td>'+fmtD(m.data)+'</td><td>'+(m.tipo==='entrada'?'Entrada':'Saída')+'</td><td>'+(p?p.descricao:'-')+'</td><td style="text-align:right">'+m.qtdKits+'</td><td style="text-align:right">'+m.unidades+'</td><td>'+(m.origem||'—')+'</td><td>'+(m.usuario||'—')+'</td></tr>';}).join('');}
-  else if(prtTipo==='venda'){titulo='Lista de Preços';cols='<th>#</th><th>ID</th><th>Descrição</th><th>Categoria</th><th style="text-align:right">Kits disp.</th><th style="text-align:right">Total Unid.</th><th style="text-align:right">Preço Obra</th><th style="text-align:right">Preço ML</th>';rows=prtItems.map((p,i)=>'<tr><td>'+(i+1)+'</td><td>'+p.id+'</td><td>'+p.descricao+'</td><td>'+(p.categoria||'—')+'</td><td style="text-align:right">'+p.qtdKits+'</td><td style="text-align:right">'+p.totalPecas+'</td><td style="text-align:right">'+fmtR(p.precoObra)+'</td><td style="text-align:right">'+fmtR(p.precoML)+'</td></tr>').join('');}
+  else if(prtTipo==='venda'){titulo='Lista de Preços';cols='<th>#</th><th>ID</th><th>Descrição</th><th>Categoria</th><th style="text-align:right">Kits disp.</th><th style="text-align:right">Total Unid.</th><th style="text-align:right">Preço Produto</th><th style="text-align:right">Preço Venda</th>';rows=prtItems.map((p,i)=>'<tr><td>'+(i+1)+'</td><td>'+p.id+'</td><td>'+p.descricao+'</td><td>'+(p.categoria||'—')+'</td><td style="text-align:right">'+p.qtdKits+'</td><td style="text-align:right">'+p.totalPecas+'</td><td style="text-align:right">'+fmtR(p.precoObra)+'</td><td style="text-align:right">'+fmtR(p.precoML)+'</td></tr>').join('');}
   else if(prtTipo==='cat'){titulo='Estoque por Categoria';cols='<th>Categoria</th><th style="text-align:right">Produtos</th><th style="text-align:right">Total Kits</th><th style="text-align:right">Total Unid.</th>';const cats={};DB.produtos.forEach(p=>{if(!cats[p.categoria])cats[p.categoria]={n:0,k:0,u:0};cats[p.categoria].n++;cats[p.categoria].k+=p.qtdKits;cats[p.categoria].u+=p.totalPecas;});rows=Object.entries(cats).sort((a,b)=>b[1].u-a[1].u).map(([c,v])=>'<tr><td>'+(c||'—')+'</td><td style="text-align:right">'+v.n+'</td><td style="text-align:right">'+v.k+'</td><td style="text-align:right">'+v.u.toLocaleString('pt-BR')+'</td></tr>').join('');}
   else if(prtTipo==='alerta'){
     titulo='Relatório de Alertas';
