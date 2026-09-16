@@ -812,7 +812,7 @@ function renderProd(){
     return'<tr class="'+(sel.has(p.id)?'sel ':'')+rc+'" onclick="toggleSel('+p.id+')" style="cursor:pointer">'+
       '<td><input type="checkbox" '+(sel.has(p.id)?'checked':'')+' onclick="event.stopPropagation();toggleSel('+p.id+')"></td>'+
       '<td><span class="bx bbl">'+p.id+'</span></td>'+
-      '<td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+p.descricao+'">'+p.descricao+((p.cor||p.marca)?'<div style="font-size:10px;color:#aaa;font-weight:400">'+[p.marca,p.cor].filter(Boolean).join(' · ')+'</div>':'')+'</td>'+
+      '<td style="max-width:230px;white-space:normal;word-break:break-word;line-height:1.3" title="'+p.descricao+'">'+p.descricao+((p.cor||p.marca)?'<div style="font-size:10px;color:#aaa;font-weight:400">'+[p.marca,p.cor].filter(Boolean).join(' · ')+'</div>':'')+'</td>'+
       '<td><span class="bx bct">'+(p.categoria||'—')+'</span></td>'+
       '<td style="color:#aaa">'+(p.unidade||'—')+'</td>'+
       '<td class="num">'+p.qtdKits+'</td>'+
