@@ -359,6 +359,7 @@ td select.tsel{height:26px;padding:0 4px;font-size:10px;border:1px solid var(--b
       <select class="fi" id="pCatF" onchange="renderProd()"><option value="">Todas categorias</option></select>
       <button class="btn bg" onclick="toggleSelAll()"><i class="ti ti-checkbox"></i> Selecionar</button>
       <button class="btn bg" onclick="exportCSV()"><i class="ti ti-download"></i> Exportar</button>
+      <button class="btn bg" onclick="openUpdAttrs()" id="btnUpdAttrs"><i class="ti ti-palette"></i> Atualizar Cor/Marca</button>
       <button class="btn bp" onclick="openAddProd()" id="btnAddP"><i class="ti ti-plus"></i> Novo</button>
     </div>
     <div class="selbar" id="selbar"><span class="selinfo" id="selinfo"></span><button class="btn bprt btn-sm" onclick="openPrint('estoque')"><i class="ti ti-printer"></i> Imprimir</button><button class="btn bg btn-sm" onclick="clearSel()"><i class="ti ti-x"></i> Limpar</button></div>
@@ -502,6 +503,10 @@ td select.tsel{height:26px;padding:0 4px;font-size:10px;border:1px solid var(--b
     <div class="fg"><label>Categoria *</label><select id="mpCat" onchange="clE('mpCatE')"><option value="">Selecione...</option><option>Hidráulico</option><option>Elétrico</option><option>Estrutural</option><option>Alvenaria</option><option>Cobertura</option><option>Fixação</option><option>Acabamento</option><option>Ferramentas</option><option>Outro</option></select><div class="err" id="mpCatE"></div></div>
     <div class="fg"><label>Unidade *</label><select id="mpUnid" onchange="clE('mpUnidE')"><option value="">Selecione...</option><option>Unidade</option><option>Kit</option><option>Metro</option><option>Rolo</option><option>Caixa</option><option>Barra</option><option>Par</option></select><div class="err" id="mpUnidE"></div></div>
   </div>
+  <div class="fr">
+    <div class="fg"><label>Cor</label><input type="text" id="mpCor" placeholder="Ex: Vermelho"></div>
+    <div class="fg"><label>Marca</label><input type="text" id="mpMarca" placeholder="Ex: Tigre"></div>
+  </div>
   <label class="kit-toggle" onclick="toggleKitField()">
     <input type="checkbox" id="mpIsKit" onclick="event.stopPropagation();toggleKitField()">
     <span class="kit-toggle-lbl"><i class="ti ti-packages" style="font-size:14px;vertical-align:middle;margin-right:4px"></i> Este produto é vendido em kit?</span>
@@ -542,6 +547,19 @@ td select.tsel{height:26px;padding:0 4px;font-size:10px;border:1px solid var(--b
     <div class="fg"><label>Localização física</label><input type="text" id="mpLoc" placeholder="Ex: Galpão A"></div>
   </div>
   <div class="fa"><button class="btn bg" onclick="closeM('mProd')">Cancelar</button><button class="btn bp" onclick="saveProd()">Salvar</button></div>
+</div></div>
+
+<!-- MODAL ATUALIZAR COR/MARCA -->
+<div class="mbg" id="mUpdAttrs"><div class="modal">
+  <div class="mhd"><span>Atualizar Cor / Marca em lote</span><button class="ib" onclick="closeM('mUpdAttrs')"><i class="ti ti-x"></i></button></div>
+  <p style="font-size:12.5px;color:#888;margin:0 0 .8rem">Envie uma planilha .xlsx com as colunas <b>ID</b>, <b>Cor</b> e <b>Marca</b>. Só esses dois campos são alterados — quantidade, preço e vencimento de cada produto continuam como estão.</p>
+  <div class="fg"><label>Arquivo (.xlsx)</label><input type="file" id="uaFile" accept=".xlsx,.xls" onchange="uaReadFile(this.files[0])"></div>
+  <div class="err" id="uaErr"></div>
+  <div id="uaPrevWrap" style="display:none;margin-top:.6rem">
+    <div style="font-size:12px;color:#888;margin-bottom:.4rem"><span id="uaCount">0</span> produtos serão atualizados.</div>
+    <div class="tw" style="max-height:280px"><table><thead><tr><th>ID</th><th>Produto</th><th>Cor</th><th>Marca</th></tr></thead><tbody id="uaPrevBody"></tbody></table></div>
+  </div>
+  <div class="fa"><button class="btn bg" onclick="closeM('mUpdAttrs')">Cancelar</button><button class="btn bp" id="uaConfirmBtn" onclick="uaConfirm()" disabled>Aplicar atualização</button></div>
 </div></div>
 
 <!-- MODAL MOV -->
@@ -671,7 +689,7 @@ async function init(){
 
 async function reloadDB(){try{const data=await api('load',{});DB.produtos=(data.produtos||[]).map(normalizeP);DB.movs=(data.movs||[]).map(normalizeM);DB.users=(data.users||[]).map(normalizeU);renderAll();}catch(e){showSaving('Erro ao recarregar','err');}}
 
-function normalizeP(r){return{id:Number(r.id),dataCadastro:String(r.dataCadastro||''),descricao:String(r.descricao||''),categoria:String(r.categoria||''),unidade:String(r.unidade||''),pecasPorKit:Number(r.pecasPorKit||1),qtdKits:Number(r.qtdKits||0),totalPecas:Number(r.totalPecas||0),precoObra:Number(r.precoObra||0),precoML:Number(r.precoML||0),dataVencimento:String(r.dataVencimento||''),estoqueMinimo:Number(r.estoqueMinimo||0),obra:String(r.obra||''),localizacao:String(r.localizacao||'')};}
+function normalizeP(r){return{id:Number(r.id),dataCadastro:String(r.dataCadastro||''),descricao:String(r.descricao||''),categoria:String(r.categoria||''),unidade:String(r.unidade||''),pecasPorKit:Number(r.pecasPorKit||1),qtdKits:Number(r.qtdKits||0),totalPecas:Number(r.totalPecas||0),precoObra:Number(r.precoObra||0),precoML:Number(r.precoML||0),dataVencimento:String(r.dataVencimento||''),estoqueMinimo:Number(r.estoqueMinimo||0),obra:String(r.obra||''),localizacao:String(r.localizacao||''),cor:String(r.cor||''),marca:String(r.marca||'')};}
 function normalizeM(r){return{id:Number(r.id),prodId:Number(r.prodId),tipo:String(r.tipo||''),qtdKits:Number(r.qtdKits||0),unidades:Number(r.unidades||0),origem:String(r.origem||''),obs:String(r.obs||''),data:String(r.data||''),usuario:String(r.usuario||'')};}
 function normalizeU(r){return{id:Number(r.id),nome:String(r.nome||''),login:String(r.login||''),senha:String(r.senha||''),perfil:String(r.perfil||'visita')};}
 
@@ -776,7 +794,7 @@ function renderAlertas(){
 function popCatFilt(){const s=document.getElementById('pCatF');const cv=s.value;s.innerHTML='<option value="">Todas categorias</option>'+CATS.map(c=>'<option'+(c===cv?' selected':'')+'>'+c+'</option>').join('');}
 function renderProd(){
   const q=document.getElementById('pSrch').value.trim().toLowerCase(),cat=document.getElementById('pCatF').value;
-  let list=DB.produtos.filter(p=>(!q||p.descricao.toLowerCase().includes(q))&&(!cat||p.categoria===cat));
+  let list=DB.produtos.filter(p=>(!q||p.descricao.toLowerCase().includes(q)||(p.cor||'').toLowerCase().includes(q)||(p.marca||'').toLowerCase().includes(q))&&(!cat||p.categoria===cat));
   list=[...list].sort((a,b)=>{
     let av=a[sortField],bv=b[sortField];
     if(typeof av==='string')av=av.toLowerCase();
@@ -794,7 +812,7 @@ function renderProd(){
     return'<tr class="'+(sel.has(p.id)?'sel ':'')+rc+'" onclick="toggleSel('+p.id+')" style="cursor:pointer">'+
       '<td><input type="checkbox" '+(sel.has(p.id)?'checked':'')+' onclick="event.stopPropagation();toggleSel('+p.id+')"></td>'+
       '<td><span class="bx bbl">'+p.id+'</span></td>'+
-      '<td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+p.descricao+'">'+p.descricao+'</td>'+
+      '<td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+p.descricao+'">'+p.descricao+((p.cor||p.marca)?'<div style="font-size:10px;color:#aaa;font-weight:400">'+[p.marca,p.cor].filter(Boolean).join(' · ')+'</div>':'')+'</td>'+
       '<td><span class="bx bct">'+(p.categoria||'—')+'</span></td>'+
       '<td style="color:#aaa">'+(p.unidade||'—')+'</td>'+
       '<td class="num">'+p.qtdKits+'</td>'+
@@ -821,7 +839,7 @@ function openAddProd(){
   document.getElementById('mpTit').textContent='Novo produto';
   document.getElementById('mpId').value='Auto';
   document.getElementById('mpDt').value=fmtD(today());
-  ['mpDesc','mpObra','mpLoc','mpTot'].forEach(id=>document.getElementById(id).value='');
+  ['mpDesc','mpObra','mpLoc','mpTot','mpCor','mpMarca'].forEach(id=>document.getElementById(id).value='');
   ['mpPec','mpQtd','mpPrecoObra','mpPrecoML','mpMin','mpMinSV'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('mpVenc').value='';
   document.getElementById('mpCat').value='';
@@ -851,6 +869,8 @@ function openEditP(id){
   document.getElementById('mpPrecoML').value=p.precoML||'';
   document.getElementById('mpObra').value=p.obra||'';
   document.getElementById('mpLoc').value=p.localizacao||'';
+  document.getElementById('mpCor').value=p.cor||'';
+  document.getElementById('mpMarca').value=p.marca||'';
   // Toggle kit
   const isKit=p.pecasPorKit>1;
   document.getElementById('mpIsKit').checked=isKit;
@@ -901,8 +921,9 @@ async function saveProd(){
   const dataVencimento=semVenc?'SEM_VENCIMENTO':document.getElementById('mpVenc').value||'';
   const estoqueMinimo=parseInt(semVenc?document.getElementById('mpMinSV').value:document.getElementById('mpMin').value)||0;
   const obra=document.getElementById('mpObra').value.trim(),loc=document.getElementById('mpLoc').value.trim();
+  const cor=document.getElementById('mpCor').value.trim(),marca=document.getElementById('mpMarca').value.trim();
   const total=pK*qK;
-  const data={id:editPId,dataCadastro:editPId?DB.produtos.find(p=>p.id===editPId)?.dataCadastro:today(),descricao:desc.toUpperCase(),categoria:cat,unidade:unid,pecasPorKit:pK,qtdKits:qK,totalPecas:total,precoObra,precoML,dataVencimento,estoqueMinimo,obra,localizacao:loc};
+  const data={id:editPId,dataCadastro:editPId?DB.produtos.find(p=>p.id===editPId)?.dataCadastro:today(),descricao:desc.toUpperCase(),categoria:cat,unidade:unid,pecasPorKit:pK,qtdKits:qK,totalPecas:total,precoObra,precoML,dataVencimento,estoqueMinimo,obra,localizacao:loc,cor,marca};
   showSaving('Salvando...');
   try{
     const res=await api('saveProd',{data});
@@ -1024,6 +1045,49 @@ function iRenderRev(){
 }
 function iUpdNS(i,s){const el=document.getElementById('ins'+i);if(el)el.textContent=Math.round(s+(irows[i].qtd||0));}
 function iRows_skip(i){irows[i].skip=true;iRenderRev();}
+let uaRows=[];
+function openUpdAttrs(){uaRows=[];document.getElementById('uaFile').value='';document.getElementById('uaErr').textContent='';document.getElementById('uaPrevWrap').style.display='none';document.getElementById('uaConfirmBtn').disabled=true;document.getElementById('mUpdAttrs').classList.add('on');}
+function uaReadFile(file){
+  document.getElementById('uaErr').textContent='';document.getElementById('uaPrevWrap').style.display='none';document.getElementById('uaConfirmBtn').disabled=true;
+  if(!file)return;
+  if(!file.name.match(/\.(xlsx|xls)$/i)){document.getElementById('uaErr').textContent='Apenas .xlsx ou .xls são aceitos.';return;}
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const wb=XLSX.read(e.target.result,{type:'array'});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      const raw=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+      if(!raw.length){document.getElementById('uaErr').textContent='Planilha vazia.';return;}
+      const hdr=raw[0].map(h=>String(h||'').trim().toLowerCase());
+      const idI=hdr.findIndex(h=>h==='id'),corI=hdr.findIndex(h=>h.includes('cor')),marI=hdr.findIndex(h=>h.includes('marca'));
+      if(idI<0){document.getElementById('uaErr').textContent='A planilha precisa ter uma coluna "ID".';return;}
+      uaRows=[];
+      raw.slice(1).forEach(row=>{
+        const id=parseInt(row[idI]);if(!id)return;
+        const cor=corI>=0?String(row[corI]||'').trim():'';
+        const marca=marI>=0?String(row[marI]||'').trim():'';
+        if(!cor&&!marca)return;
+        const prod=DB.produtos.find(p=>p.id===id);
+        uaRows.push({id,cor,marca,desc:prod?prod.descricao:'(produto não encontrado)',found:!!prod});
+      });
+      if(!uaRows.length){document.getElementById('uaErr').textContent='Nenhuma linha com Cor ou Marca preenchida foi encontrada.';return;}
+      document.getElementById('uaCount').textContent=uaRows.filter(r=>r.found).length;
+      document.getElementById('uaPrevBody').innerHTML=uaRows.map(r=>'<tr'+(r.found?'':' style="opacity:.4"')+'><td>'+r.id+'</td><td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px">'+r.desc+'</td><td>'+(r.cor||'—')+'</td><td>'+(r.marca||'—')+'</td></tr>').join('');
+      document.getElementById('uaPrevWrap').style.display='';
+      document.getElementById('uaConfirmBtn').disabled=!uaRows.some(r=>r.found);
+    }catch(err){document.getElementById('uaErr').textContent='Não foi possível ler o arquivo.';}
+  };
+  reader.readAsArrayBuffer(file);
+}
+async function uaConfirm(){
+  const valid=uaRows.filter(r=>r.found);if(!valid.length)return;
+  showSaving('Atualizando...');
+  try{
+    const res=await api('updateFields',{rows:valid.map(r=>({id:r.id,cor:r.cor,marca:r.marca}))});
+    valid.forEach(r=>{const p=DB.produtos.find(x=>x.id===r.id);if(p){if(r.cor)p.cor=r.cor;if(r.marca)p.marca=r.marca;}});
+    showSaving('Atualizado!','ok');renderProd();closeM('mUpdAttrs');
+  }catch(e){showSaving('Erro ao atualizar','err');alert('Erro: '+e.message);}
+}
 async function iConfirm(){
   const valid=irows.filter(r=>!r.skip);if(!valid.length){document.getElementById('ierr3').textContent='Nenhuma linha para importar.';return;}
   document.getElementById('ierr3').textContent='';
@@ -1044,7 +1108,7 @@ function iReset(){iwb=null;iraw=[];icolH=[];irows=[];iactSheet=0;document.getEle
 
 function renderRel(){document.getElementById('relBody').innerHTML=DB.produtos.map(p=>'<tr><td><span class="bx bbl">'+p.id+'</span></td><td style="font-size:11px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+p.descricao+'</td><td><span class="bx bct">'+(p.categoria||'—')+'</span></td><td class="num">'+p.qtdKits+'</td><td class="num">'+p.totalPecas+'</td><td class="num">'+fmtR(p.precoObra)+'</td><td class="num">'+fmtR(p.precoML)+'</td><td>'+fmtVenc(p.dataVencimento)+'</td><td style="font-size:11px;color:#aaa">'+(p.localizacao||'—')+'</td></tr>').join('');}
 
-function exportCSV(){const rows=[['ID','Data Cadastro','Descrição','Categoria','Unidade','Peças por Kit','Qtd. Kits','Total Peças','Preço Produto','Preço Venda','Data Vencimento','Estoque Mínimo','Obra Origem','Localização'],...DB.produtos.map(p=>[p.id,p.dataCadastro,'"'+p.descricao+'"',p.categoria,p.unidade,p.pecasPorKit,p.qtdKits,p.totalPecas,p.precoObra||'',p.precoML||'',p.dataVencimento||'',p.estoqueMinimo||'',p.obra||'',p.localizacao||''])];const csv=rows.map(r=>r.join(';')).join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'}));a.download='estoque_solida_'+today()+'.csv';a.click();}
+function exportCSV(){const rows=[['ID','Data Cadastro','Descrição','Categoria','Unidade','Peças por Kit','Qtd. Kits','Total Peças','Preço Produto','Preço Venda','Data Vencimento','Estoque Mínimo','Obra Origem','Localização','Cor','Marca'],...DB.produtos.map(p=>[p.id,p.dataCadastro,'"'+p.descricao+'"',p.categoria,p.unidade,p.pecasPorKit,p.qtdKits,p.totalPecas,p.precoObra||'',p.precoML||'',p.dataVencimento||'',p.estoqueMinimo||'',p.obra||'',p.localizacao||'',p.cor||'',p.marca||''])];const csv=rows.map(r=>r.join(';')).join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'}));a.download='estoque_solida_'+today()+'.csv';a.click();}
 
 function openPrint(tipo){prtTipo=tipo;prtItems=sel.size>0&&tipo!=='mov'&&tipo!=='alerta'?DB.produtos.filter(p=>sel.has(p.id)):tipo==='mov'?DB.movs:DB.produtos;const labels={estoque:'Estoque completo',venda:'Lista de preços',mov:'Movimentações',cat:'Por categoria',alerta:'Relatório de alertas'};document.getElementById('prtInfo').innerHTML='<strong>'+labels[tipo]+'</strong> · '+prtItems.length+' registro'+(prtItems.length!==1?'s':'');prtFmt='A4';document.getElementById('pA4').classList.add('sel');document.getElementById('pPDF').classList.remove('sel');document.getElementById('prtObs').value='';document.getElementById('mPrint').classList.add('on');}
 function selFmt(f){prtFmt=f;document.getElementById('pA4').classList.toggle('sel',f==='A4');document.getElementById('pPDF').classList.toggle('sel',f==='PDF');}
