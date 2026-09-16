@@ -59,7 +59,7 @@ body{font-family:Arial,sans-serif;color:var(--gray);font-size:13px;background:va
 .alert-dot.on{display:block}
 
 .page{display:none;padding:1rem 1.25rem;max-width:1200px;margin:0 auto;width:100%}
-#page-mov{max-width:1500px}
+#page-prod,#page-mov,#page-alrt,#page-rel{max-width:1500px}
 .page.on{display:block}
 
 .saving{position:fixed;bottom:16px;right:16px;background:var(--blue);color:#fff;font-size:12px;padding:8px 14px;border-radius:8px;display:none;align-items:center;gap:6px;z-index:300;box-shadow:0 4px 14px rgba(0,0,0,.2)}
@@ -389,14 +389,14 @@ td select.tsel{height:26px;padding:0 4px;font-size:10px;border:1px solid var(--b
   <!-- MOVIMENTAÇÕES -->
   <div class="page" id="page-mov">
     <div class="tb2">
-      <div class="sw"><i class="ti ti-search"></i><input type="text" id="mSrch" placeholder="Buscar produto..." oninput="renderMov()"></div>
+      <div class="sw"><i class="ti ti-search"></i><input type="text" id="mSrch" placeholder="Buscar produto ou solicitante..." oninput="renderMov()"></div>
       <select class="fi" id="mTF" onchange="renderMov()"><option value="">Entradas e saídas</option><option value="entrada">Só entradas</option><option value="saida">Só saídas</option></select>
       <button class="btn bsuc" onclick="openMovM('entrada')" id="btnEnt"><i class="ti ti-arrow-bar-down"></i> Entrada</button>
       <button class="btn bwrn" onclick="openMovM('saida')" id="btnSai"><i class="ti ti-arrow-bar-up"></i> Saída</button>
       <button class="btn bprt" onclick="openPrint('mov')"><i class="ti ti-printer"></i> Imprimir</button>
     </div>
     <div class="tw"><table>
-      <thead><tr><th>Data</th><th>Tipo</th><th>Produto</th><th class="num">Kits</th><th class="num">Unid.</th><th>Origem / Destino</th><th>Usuário</th><th>Obs.</th><th></th></tr></thead>
+      <thead><tr><th>Data</th><th>Tipo</th><th>Produto</th><th class="num">Kits</th><th class="num">Unid.</th><th>Origem / Destino</th><th>Solicitação</th><th>Solicitante</th><th>Usuário</th><th>Obs.</th><th></th></tr></thead>
       <tbody id="mBody"></tbody>
     </table></div>
   </div>
@@ -573,6 +573,10 @@ td select.tsel{height:26px;padding:0 4px;font-size:10px;border:1px solid var(--b
     <div class="fg"><label>Total de peças (automático)</label><input type="text" id="mmTot" class="ro" readonly></div>
   </div>
   <div class="fg"><label id="mmOrigLbl">Origem</label><input type="text" id="mmOrig" placeholder="Ex: Mo491"></div>
+  <div class="fr">
+    <div class="fg"><label>Nº Solicitação</label><input type="text" id="mmSolic" placeholder="Ex: 1351"></div>
+    <div class="fg"><label>Solicitante</label><input type="text" id="mmSolicNm" placeholder="Nome do funcionário"></div>
+  </div>
   <div class="fg"><label>Observação</label><textarea id="mmObs" placeholder="Opcional..."></textarea></div>
   <div class="fa"><button class="btn bg" onclick="closeM('mMov')">Cancelar</button><button class="btn bp" id="mmSaveBtn" onclick="saveMov()">Registrar</button></div>
 </div></div>
@@ -602,7 +606,7 @@ td select.tsel{height:26px;padding:0 4px;font-size:10px;border:1px solid var(--b
   <div class="fg"><label>Nome *</label><input type="text" id="muNm" oninput="clE('muNmE')"><div class="err" id="muNmE"></div></div>
   <div class="fg"><label>Login *</label><input type="text" id="muLg" oninput="clE('muLgE')"><div class="err" id="muLgE"></div></div>
   <div class="fg"><label>Senha *</label><input type="password" id="muSn" oninput="clE('muSnE')"><div class="err" id="muSnE"></div></div>
-  <div class="fg"><label>Perfil</label><select id="muPf"><option value="admin">Admin — acesso total</option><option value="vendas">Vendas — registra saídas</option><option value="visita">Visitante — só visualiza</option></select></div>
+  <div class="fg"><label>Perfil</label><select id="muPf"><option value="admin">Admin — acesso total</option><option value="visita">Visitante — só visualiza</option></select></div>
   <div class="fa"><button class="btn bg" onclick="closeM('mUser')">Cancelar</button><button class="btn bp" onclick="saveUser()">Salvar</button></div>
 </div></div>
 
@@ -691,7 +695,7 @@ async function init(){
 async function reloadDB(){try{const data=await api('load',{});DB.produtos=(data.produtos||[]).map(normalizeP);DB.movs=(data.movs||[]).map(normalizeM);DB.users=(data.users||[]).map(normalizeU);renderAll();}catch(e){showSaving('Erro ao recarregar','err');}}
 
 function normalizeP(r){return{id:Number(r.id),dataCadastro:String(r.dataCadastro||''),descricao:String(r.descricao||''),categoria:String(r.categoria||''),unidade:String(r.unidade||''),pecasPorKit:Number(r.pecasPorKit||1),qtdKits:Number(r.qtdKits||0),totalPecas:Number(r.totalPecas||0),precoObra:Number(r.precoObra||0),precoML:Number(r.precoML||0),dataVencimento:String(r.dataVencimento||''),estoqueMinimo:Number(r.estoqueMinimo||0),obra:String(r.obra||''),localizacao:String(r.localizacao||''),cor:String(r.cor||''),marca:String(r.marca||'')};}
-function normalizeM(r){return{id:Number(r.id),prodId:Number(r.prodId),tipo:String(r.tipo||''),qtdKits:Number(r.qtdKits||0),unidades:Number(r.unidades||0),origem:String(r.origem||''),obs:String(r.obs||''),data:String(r.data||''),usuario:String(r.usuario||'')};}
+function normalizeM(r){return{id:Number(r.id),prodId:Number(r.prodId),tipo:String(r.tipo||''),qtdKits:Number(r.qtdKits||0),unidades:Number(r.unidades||0),origem:String(r.origem||''),obs:String(r.obs||''),data:String(r.data||''),usuario:String(r.usuario||''),solicitacao:String(r.solicitacao||''),solicitante:String(r.solicitante||'')};}
 function normalizeU(r){return{id:Number(r.id),nome:String(r.nome||''),login:String(r.login||''),senha:String(r.senha||''),perfil:String(r.perfil||'visita')};}
 
 function nid(a){return a.length?Math.max(...a.map(x=>x.id))+1:1;}
@@ -741,11 +745,11 @@ function doLogin(){
   document.getElementById('loginWrap').style.display='none';
   document.getElementById('appWrap').style.display='flex';
   document.getElementById('uNm').textContent=usr.nome;
-  document.getElementById('uRl').textContent=' · '+(usr.perfil==='admin'?'Admin':usr.perfil==='vendas'?'Vendas':'Visitante');
+  document.getElementById('uRl').textContent=' · '+(usr.perfil==='admin'?'Admin':'Visitante');
   applyPerms();renderAll();
 }
 function doLogout(){CU=null;document.getElementById('appWrap').style.display='none';document.getElementById('loginWrap').style.display='flex';document.getElementById('lu').value='';document.getElementById('lp').value='';document.getElementById('lerr').textContent='';goPg('dash');}
-function applyPerms(){const p=CU.perfil;document.getElementById('navUsr').style.display=p==='admin'?'':'none';document.getElementById('navImp').style.display=p!=='visita'?'':'none';document.getElementById('btnAddP').style.display=p==='admin'?'':'none';document.getElementById('btnEnt').style.display=p==='admin'?'':'none';document.getElementById('btnSai').style.display=p!=='visita'?'':'none';}
+function applyPerms(){const p=CU.perfil;document.getElementById('navUsr').style.display=p==='admin'?'':'none';document.getElementById('navImp').style.display=p==='admin'?'':'none';document.getElementById('btnAddP').style.display=p==='admin'?'':'none';document.getElementById('btnUpdAttrs').style.display=p==='admin'?'':'none';document.getElementById('btnEnt').style.display=p==='admin'?'':'none';document.getElementById('btnSai').style.display=p==='admin'?'':'none';}
 function goPg(pg){document.querySelectorAll('.page').forEach(x=>x.classList.remove('on'));document.querySelectorAll('.ni').forEach(x=>x.classList.remove('on'));document.getElementById('page-'+pg).classList.add('on');const ni=document.querySelector('[data-p="'+pg+'"]');if(ni)ni.classList.add('on');if(pg==='rel')renderRel();if(pg==='alrt')renderAlertas();}
 
 function renderDash(){
@@ -763,7 +767,7 @@ function renderDash(){
     '<div class="scard" style="cursor:pointer" onclick="goPg(\'alrt\')"><div class="slbl">Estoque baixo</div><div class="sval orange">'+baixo+'</div></div>'+
     '<div class="scard"><div class="slbl">Movimentações</div><div class="sval gray">'+DB.movs.length+'</div></div>';
   const um=[...DB.movs].reverse().slice(0,6);
-  document.getElementById('dMov').innerHTML=um.length?'<table><tbody>'+um.map(m=>{const p=DB.produtos.find(x=>x.id===m.prodId);return'<tr><td style="font-size:10px;color:#bbb;white-space:nowrap">'+fmtD(m.data)+'</td><td><span class="bx '+(m.tipo==='entrada'?'bgr':'bor')+'">'+(m.tipo==='entrada'?'Entrada':'Saída')+'</span></td><td style="font-size:11px;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(p?p.descricao:'-')+'</td><td style="text-align:right;font-size:11px">'+m.qtdKits+'k</td></tr>';}).join('')+'</tbody></table>':'<div class="empty" style="padding:1.25rem"><i class="ti ti-arrows-exchange"></i>Sem movimentações</div>';
+  document.getElementById('dMov').innerHTML=um.length?'<table><tbody>'+um.map(m=>{const p=DB.produtos.find(x=>x.id===m.prodId);return'<tr><td style="font-size:10px;color:#bbb;white-space:nowrap">'+fmtD(m.data)+'</td><td><span class="bx '+(m.tipo==='entrada'?'bgr':'bor')+'">'+(m.tipo==='entrada'?'Entrada':'Saída')+'</span></td><td style="font-size:11px;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+(p?p.descricao:'')+'">'+(p?p.descricao:'-')+'</td><td style="text-align:right;font-size:11px">'+m.qtdKits+'k</td></tr>';}).join('')+'</tbody></table>':'<div class="empty" style="padding:1.25rem"><i class="ti ti-arrows-exchange"></i>Sem movimentações</div>';
   const cats={};DB.produtos.forEach(p=>{if(!cats[p.categoria])cats[p.categoria]={k:0,u:0};cats[p.categoria].k+=p.qtdKits;cats[p.categoria].u+=p.totalPecas;});
   const cr=Object.entries(cats).sort((a,b)=>b[1].u-a[1].u).map(([c,v])=>'<tr><td><span class="bx bct">'+(c||'—')+'</span></td><td style="text-align:right">'+v.k+'</td><td style="text-align:right">'+v.u+'</td></tr>').join('');
   document.getElementById('dCat').innerHTML=cr?'<table><thead><tr><th>Categoria</th><th class="num">Kits</th><th class="num">Unid.</th></tr></thead><tbody>'+cr+'</tbody></table>':'<div class="empty" style="padding:1.25rem">Sem dados</div>';
@@ -961,7 +965,7 @@ function mmProdPick(){
   if(mmSelPid&&!DB.produtos.some(p=>p.id===mmSelPid))mmSelPid=null;
   mmSaldo();
 }
-function openMovM(tipo){movTipo=tipo;document.getElementById('mmTit').textContent=tipo==='entrada'?'Registrar entrada':'Registrar saída';document.getElementById('mmOrigLbl').textContent=tipo==='entrada'?'Origem (obra ou fornecedor)':'Destino (obra ou cliente)';document.getElementById('mmSaveBtn').textContent=tipo==='entrada'?'Registrar entrada':'Registrar saída';document.getElementById('mmProd').value='';mmSelPid=null;document.getElementById('mmQtd').value='';document.getElementById('mmTot').value='';document.getElementById('mmOrig').value='';document.getElementById('mmObs').value='';document.getElementById('mmSaldoInfo').textContent='';['mmProdE','mmQtdE'].forEach(id=>clE(id));document.getElementById('mMov').classList.add('on');}
+function openMovM(tipo){movTipo=tipo;document.getElementById('mmTit').textContent=tipo==='entrada'?'Registrar entrada':'Registrar saída';document.getElementById('mmOrigLbl').textContent=tipo==='entrada'?'Origem (obra ou fornecedor)':'Destino (obra ou cliente)';document.getElementById('mmSaveBtn').textContent=tipo==='entrada'?'Registrar entrada':'Registrar saída';document.getElementById('mmProd').value='';mmSelPid=null;document.getElementById('mmQtd').value='';document.getElementById('mmTot').value='';document.getElementById('mmOrig').value='';document.getElementById('mmSolic').value='';document.getElementById('mmSolicNm').value='';document.getElementById('mmObs').value='';document.getElementById('mmSaldoInfo').textContent='';['mmProdE','mmQtdE'].forEach(id=>clE(id));document.getElementById('mMov').classList.add('on');}
 function mmSaldo(){const p=DB.produtos.find(x=>x.id===mmSelPid);document.getElementById('mmSaldoInfo').textContent=p?'Saldo atual: '+p.qtdKits+' kits — '+p.totalPecas+' unidades'+(p.estoqueMinimo>0?' | Mínimo: '+p.estoqueMinimo+' kits':''):'';mmCalcT();}
 function mmCalcT(){const p=DB.produtos.find(x=>x.id===mmSelPid);const qK=parseInt(document.getElementById('mmQtd').value)||0;document.getElementById('mmTot').value=p&&qK?p.pecasPorKit*qK:'';}
 async function saveMov(){
@@ -973,7 +977,8 @@ async function saveMov(){
   const p=DB.produtos.find(x=>x.id===pid);if(!p)return;
   if(movTipo==='saida'&&qK>p.qtdKits){document.getElementById('mmQtdE').textContent='Saldo insuficiente ('+p.qtdKits+' kits disponíveis)';return;}
   const unids=p.pecasPorKit*qK,orig=document.getElementById('mmOrig').value.trim(),obs=document.getElementById('mmObs').value.trim();
-  const data={prodId:pid,tipo:movTipo,qtdKits:qK,unidades:unids,origem:orig,obs,data:today(),usuario:CU.nome};
+  const solicitacao=document.getElementById('mmSolic').value.trim(),solicitante=document.getElementById('mmSolicNm').value.trim();
+  const data={prodId:pid,tipo:movTipo,qtdKits:qK,unidades:unids,origem:orig,obs,data:today(),usuario:CU.nome,solicitacao,solicitante};
   showSaving('Registrando...');
   try{
     const res=await api('saveMov',{data});
@@ -987,8 +992,8 @@ async function saveMov(){
 function renderMov(){
   const q=document.getElementById('mSrch').value.trim().toLowerCase(),tf=document.getElementById('mTF').value;
   const isA=CU&&CU.perfil==='admin';
-  const list=[...DB.movs].reverse().filter(m=>{const p=DB.produtos.find(x=>x.id===m.prodId);return(!q||(p&&p.descricao.toLowerCase().includes(q)))&&(!tf||m.tipo===tf);});
-  document.getElementById('mBody').innerHTML=list.length?list.map(m=>{const p=DB.produtos.find(x=>x.id===m.prodId);return'<tr><td style="font-size:10px;color:#bbb;white-space:nowrap">'+fmtD(m.data)+'</td><td><span class="bx '+(m.tipo==='entrada'?'bgr':'bor')+'">'+(m.tipo==='entrada'?'Entrada':'Saída')+'</span></td><td style="font-size:11px;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(p?p.descricao:'-')+'</td><td class="num">'+m.qtdKits+'</td><td class="num">'+m.unidades+'</td><td style="font-size:11px;color:#aaa">'+(m.origem||'—')+'</td><td style="font-size:11px;color:#aaa">'+(m.usuario||'—')+'</td><td style="font-size:11px;color:#bbb;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(m.obs||'—')+'</td><td>'+(isA?'<button class="ib d" onclick="askDelMov('+m.id+')"><i class="ti ti-trash"></i></button>':'')+'</td></tr>';}).join(''):'<tr><td colspan="9"><div class="empty"><i class="ti ti-arrows-exchange"></i>Nenhuma movimentação</div></td></tr>';
+  const list=[...DB.movs].reverse().filter(m=>{const p=DB.produtos.find(x=>x.id===m.prodId);return(!q||(p&&p.descricao.toLowerCase().includes(q))||(m.solicitante||'').toLowerCase().includes(q)||(m.solicitacao||'').toLowerCase().includes(q))&&(!tf||m.tipo===tf);});
+  document.getElementById('mBody').innerHTML=list.length?list.map(m=>{const p=DB.produtos.find(x=>x.id===m.prodId);return'<tr><td style="font-size:10px;color:#bbb;white-space:nowrap">'+fmtD(m.data)+'</td><td><span class="bx '+(m.tipo==='entrada'?'bgr':'bor')+'">'+(m.tipo==='entrada'?'Entrada':'Saída')+'</span></td><td style="font-size:11px;max-width:210px;white-space:normal;word-break:break-word;line-height:1.3">'+(p?p.descricao:'-')+((p&&(p.cor||p.marca))?'<div style="font-size:10px;color:#aaa">'+[p.marca,p.cor].filter(Boolean).join(' · ')+'</div>':'')+'</td><td class="num">'+m.qtdKits+'</td><td class="num">'+m.unidades+'</td><td style="font-size:11px;color:#aaa">'+(m.origem||'—')+'</td><td style="font-size:11px;color:#aaa">'+(m.solicitacao||'—')+'</td><td style="font-size:11px;color:#aaa">'+(m.solicitante||'—')+'</td><td style="font-size:11px;color:#aaa">'+(m.usuario||'—')+'</td><td style="font-size:11px;color:#bbb;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+(m.obs||'')+'">'+(m.obs||'—')+'</td><td>'+(isA?'<button class="ib d" onclick="askDelMov('+m.id+')"><i class="ti ti-trash"></i></button>':'')+'</td></tr>';}).join(''):'<tr><td colspan="11"><div class="empty"><i class="ti ti-arrows-exchange"></i>Nenhuma movimentação</div></td></tr>';
 }
 
 function downloadModelo(){
@@ -1123,7 +1128,7 @@ async function iConfirm(){
 function iGoStep(n){['ip1','ip2','ip3','ipOk'].forEach(id=>document.getElementById(id).style.display='none');[1,2,3].forEach(i=>{document.getElementById('isn'+i).className='snum';document.getElementById('isl'+i).className='slbl2';if(i<3)document.getElementById('iline'+i).className='sline';});if(n==='ok'){document.getElementById('ipOk').style.display='';[1,2,3].forEach(i=>{document.getElementById('isn'+i).className='snum dn';document.getElementById('isn'+i).innerHTML='<i class="ti ti-check" style="font-size:11px"></i>';document.getElementById('isl'+i).className='slbl2 dn';if(i<3)document.getElementById('iline'+i).className='sline dn';});return;}document.getElementById('ip'+n).style.display='';for(let i=1;i<n;i++){document.getElementById('isn'+i).className='snum dn';document.getElementById('isn'+i).innerHTML='<i class="ti ti-check" style="font-size:11px"></i>';document.getElementById('isl'+i).className='slbl2 dn';if(i<3)document.getElementById('iline'+i).className='sline dn';}document.getElementById('isn'+n).className='snum act';document.getElementById('isl'+n).className='slbl2 act';}
 function iReset(){iwb=null;iraw=[];icolH=[];irows=[];iactSheet=0;document.getElementById('ifileinfo').style.display='none';document.getElementById('ifile').value='';document.getElementById('ierr1').textContent='';iGoStep(1);}
 
-function renderRel(){document.getElementById('relBody').innerHTML=DB.produtos.map(p=>'<tr><td><span class="bx bbl">'+p.id+'</span></td><td style="font-size:11px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+p.descricao+'</td><td><span class="bx bct">'+(p.categoria||'—')+'</span></td><td class="num">'+p.qtdKits+'</td><td class="num">'+p.totalPecas+'</td><td class="num">'+fmtR(p.precoObra)+'</td><td class="num">'+fmtR(p.precoML)+'</td><td>'+fmtVenc(p.dataVencimento)+'</td><td style="font-size:11px;color:#aaa">'+(p.localizacao||'—')+'</td></tr>').join('');}
+function renderRel(){document.getElementById('relBody').innerHTML=DB.produtos.map(p=>'<tr><td><span class="bx bbl">'+p.id+'</span></td><td style="font-size:11px;max-width:180px;white-space:normal;word-break:break-word;line-height:1.3">'+p.descricao+((p.cor||p.marca)?'<div style="font-size:10px;color:#aaa">'+[p.marca,p.cor].filter(Boolean).join(' · ')+'</div>':'')+'</td><td><span class="bx bct">'+(p.categoria||'—')+'</span></td><td class="num">'+p.qtdKits+'</td><td class="num">'+p.totalPecas+'</td><td class="num">'+fmtR(p.precoObra)+'</td><td class="num">'+fmtR(p.precoML)+'</td><td>'+fmtVenc(p.dataVencimento)+'</td><td style="font-size:11px;color:#aaa">'+(p.localizacao||'—')+'</td></tr>').join('');}
 
 function exportCSV(){const rows=[['ID','Data Cadastro','Descrição','Categoria','Unidade','Peças por Kit','Qtd. Kits','Total Peças','Preço Produto','Preço Venda','Data Vencimento','Estoque Mínimo','Obra Origem','Localização','Cor','Marca'],...DB.produtos.map(p=>[p.id,p.dataCadastro,'"'+p.descricao+'"',p.categoria,p.unidade,p.pecasPorKit,p.qtdKits,p.totalPecas,p.precoObra||'',p.precoML||'',p.dataVencimento||'',p.estoqueMinimo||'',p.obra||'',p.localizacao||'',p.cor||'',p.marca||''])];const csv=rows.map(r=>r.join(';')).join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'}));a.download='estoque_solida_'+today()+'.csv';a.click();}
 
@@ -1151,9 +1156,9 @@ function doPrint(){
   const w=window.open('','_blank','width=950,height=720');if(!w){alert('Permita pop-ups.');return;}w.document.write(html);w.document.close();w.onload=()=>{w.focus();w.print();};closeM('mPrint');
 }
 
-function renderUsers(){if(!CU||CU.perfil!=='admin')return;const roles={admin:'Admin',vendas:'Vendas',visita:'Visitante'};document.getElementById('uList').innerHTML=DB.users.map(u=>'<div class="ucard"><div class="uav">'+u.nome[0].toUpperCase()+'</div><div><div class="unm">'+u.nome+'</div><div class="url2">@'+u.login+' · '+(roles[u.perfil]||u.perfil)+'</div></div><div class="uact"><button class="ib e" onclick="openEditU('+u.id+')"><i class="ti ti-edit"></i></button>'+(u.login!=='admin'?'<button class="ib d" onclick="askDel('+u.id+',\''+u.nome+'\',\'user\')"><i class="ti ti-trash"></i></button>':'')+'</div></div>').join('');}
-function openAddUser(){editUId=null;document.getElementById('muTit').textContent='Novo usuário';['muNm','muLg','muSn'].forEach(id=>document.getElementById(id).value='');document.getElementById('muPf').value='vendas';['muNmE','muLgE','muSnE'].forEach(id=>clE(id));document.getElementById('mUser').classList.add('on');}
-function openEditU(id){const u=DB.users.find(x=>x.id===id);if(!u)return;editUId=id;document.getElementById('muTit').textContent='Editar usuário';document.getElementById('muNm').value=u.nome;document.getElementById('muLg').value=u.login;document.getElementById('muSn').value=u.senha;document.getElementById('muPf').value=u.perfil;['muNmE','muLgE','muSnE'].forEach(id=>clE(id));document.getElementById('mUser').classList.add('on');}
+function renderUsers(){if(!CU||CU.perfil!=='admin')return;const roles={admin:'Admin',vendas:'Visitante',visita:'Visitante'};document.getElementById('uList').innerHTML=DB.users.map(u=>'<div class="ucard"><div class="uav">'+u.nome[0].toUpperCase()+'</div><div><div class="unm">'+u.nome+'</div><div class="url2">@'+u.login+' · '+(roles[u.perfil]||u.perfil)+'</div></div><div class="uact"><button class="ib e" onclick="openEditU('+u.id+')"><i class="ti ti-edit"></i></button>'+(u.login!=='admin'?'<button class="ib d" onclick="askDel('+u.id+',\''+u.nome+'\',\'user\')"><i class="ti ti-trash"></i></button>':'')+'</div></div>').join('');}
+function openAddUser(){editUId=null;document.getElementById('muTit').textContent='Novo usuário';['muNm','muLg','muSn'].forEach(id=>document.getElementById(id).value='');document.getElementById('muPf').value='visita';['muNmE','muLgE','muSnE'].forEach(id=>clE(id));document.getElementById('mUser').classList.add('on');}
+function openEditU(id){const u=DB.users.find(x=>x.id===id);if(!u)return;editUId=id;document.getElementById('muTit').textContent='Editar usuário';document.getElementById('muNm').value=u.nome;document.getElementById('muLg').value=u.login;document.getElementById('muSn').value=u.senha;document.getElementById('muPf').value=u.perfil==='admin'?'admin':'visita';['muNmE','muLgE','muSnE'].forEach(id=>clE(id));document.getElementById('mUser').classList.add('on');}
 async function saveUser(){
   let ok=true;
   const nome=document.getElementById('muNm').value.trim(),login=document.getElementById('muLg').value.trim().toLowerCase(),senha=document.getElementById('muSn').value,perfil=document.getElementById('muPf').value;
