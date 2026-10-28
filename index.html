@@ -606,6 +606,17 @@ td select.tsel{height:27px;padding:0 4px;font-size:10px;border:1.5px solid var(-
       </div>
     </div>
     <div class="divl"></div>
+    <div id="cfgAdmin" style="display:none">
+      <div class="stitle">Manutenção (admin)</div>
+      <div class="cfg-row">
+        <div>
+          <div class="cfg-row-lbl">Converter todos os kits em unidades</div>
+          <div class="cfg-row-sub">Passa todo o estoque a ser controlado por unidade. O total de peças de cada produto não muda, só deixa de existir a contagem em kits. Faça uma vez só. Antes, exporte o CSV em Produtos para guardar a configuração atual de kits.</div>
+        </div>
+        <button class="btn bdng" onclick="convertToUnits()"><i class="ti ti-arrows-transfer-down"></i> Converter</button>
+      </div>
+      <div class="divl"></div>
+    </div>
     <div class="stitle">Conta</div>
     <div class="cfg-row">
       <div>
@@ -878,6 +889,18 @@ function doLogin(){
 function doLogout(){CU=null;document.getElementById('appWrap').style.display='none';document.getElementById('loginWrap').style.display='flex';document.getElementById('lu').value='';document.getElementById('lp').value='';document.getElementById('lerr').textContent='';goPg('dash');}
 function applyPerms(){const p=CU.perfil;document.getElementById('navUsr').style.display=p==='admin'?'':'none';document.getElementById('navImp').style.display=p==='admin'?'':'none';document.getElementById('btnAddP').style.display=p==='admin'?'':'none';document.getElementById('btnUpdAttrs').style.display=p==='admin'?'':'none';document.getElementById('btnEnt').style.display=p==='admin'?'':'none';document.getElementById('btnSai').style.display=p==='admin'?'':'none';}
 function goPg(pg){document.querySelectorAll('.page').forEach(x=>x.classList.remove('on'));document.querySelectorAll('.ni').forEach(x=>x.classList.remove('on'));document.getElementById('page-'+pg).classList.add('on');const ni=document.querySelector('[data-p="'+pg+'"]');if(ni)ni.classList.add('on');if(pg==='rel')renderRel();if(pg==='alrt')renderAlertas();if(pg==='cfg')renderCfg();}
+async function convertToUnits(){
+  if(!CU||CU.perfil!=='admin')return;
+  const kits=DB.produtos.filter(p=>p.pecasPorKit>1).length;
+  if(!confirm('Converter TODOS os produtos para unidade?\n\n'+kits+' produtos hoje estão em kit.\nO total de peças de cada um não muda, mas a contagem por kit deixa de existir e não dá para desfazer pelo sistema.\n\nVocê exportou o CSV de Produtos como cópia de segurança?'))return;
+  showSaving('Convertendo...');
+  try{
+    const res=await api('convertToUnits',{});
+    showSaving('Convertido!','ok');
+    alert('Pronto: '+(res.converted||0)+' produtos convertidos. A página vai recarregar.');
+    location.reload();
+  }catch(e){showSaving('Erro','err');alert('Erro: '+e.message);}
+}
 const THEME_KEY='solida_theme';
 function setTheme(t){
   document.documentElement.setAttribute('data-theme',t);
@@ -890,6 +913,7 @@ function renderCfg(){
   if(!CU)return;
   document.getElementById('cfgUserName').textContent=CU.nome;
   document.getElementById('cfgUserRole').textContent=CU.perfil==='admin'?'Administrador':'Visitante';
+  document.getElementById('cfgAdmin').style.display=CU.perfil==='admin'?'':'none';
 }
 
 function renderDash(){
